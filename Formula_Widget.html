@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Button Formula Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+            background-color: #191919; /* Notion dark mode background */
+            color: #rgba(255, 255, 255, 0.81);
+        }
+        /* Custom scrollbar to match dark theme */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #474c50; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #5c6266; 
+        }
+        input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.8);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 text-[#e0e0e0]">
+
+    <div class="w-full max-w-2xl bg-[#202020] rounded-xl border border-[#373737] shadow-2xl p-6 sm:p-8">
+        
+        <div class="mb-8">
+            <h1 class="text-2xl font-semibold text-white mb-2 flex items-center gap-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#2eaadc]"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+                Notion Formula Generator
+            </h1>
+            <p class="text-sm text-[#9b9b9b]">Generate date and time formulas for your Notion buttons effortlessly.</p>
+        </div>
+
+        <!-- Controls -->
+        <div class="space-y-6">
+            
+            <!-- Time Inputs -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1.5">
+                    <label for="startTime" class="text-sm font-medium text-[#9b9b9b]">Start Time</label>
+                    <input type="time" id="startTime" value="05:00" 
+                           class="bg-[#2a2a2a] border border-[#373737] rounded-md px-3 py-2 text-white focus:outline-none focus:border-[#2eaadc] focus:ring-1 focus:ring-[#2eaadc] transition-colors">
+                </div>
+                
+                <div class="flex flex-col gap-1.5">
+                    <label for="endTime" class="text-sm font-medium text-[#9b9b9b]">End Time</label>
+                    <input type="time" id="endTime" value="06:00" 
+                           class="bg-[#2a2a2a] border border-[#373737] rounded-md px-3 py-2 text-white focus:outline-none focus:border-[#2eaadc] focus:ring-1 focus:ring-[#2eaadc] transition-colors">
+                </div>
+            </div>
+
+            <!-- Next Day Checkbox -->
+            <div class="flex flex-col gap-2 pt-2">
+                <label class="flex items-center gap-2 cursor-pointer group w-fit">
+                    <input type="checkbox" id="nextDayCheck" class="hidden peer">
+                    <div class="w-4 h-4 rounded border border-[#555] peer-checked:bg-[#2eaadc] peer-checked:border-[#2eaadc] flex items-center justify-center transition-all">
+                        <svg class="w-3 h-3 text-white opacity-0 peer-checked:opacity-100 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <span class="text-sm font-medium text-[#9b9b9b] group-hover:text-white transition-colors">End time is on the next day</span>
+                </label>
+            </div>
+
+            <!-- Output Area -->
+            <div class="pt-4 flex flex-col gap-2">
+                <div class="flex justify-between items-end">
+                    <label class="text-sm font-medium text-[#9b9b9b]">Generated Formula</label>
+                    <button id="copyBtn" class="text-xs flex items-center gap-1.5 bg-[#2eaadc] hover:bg-[#258eab] text-white px-3 py-1.5 rounded transition-colors shadow-sm">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                        <span id="copyText">Copy</span>
+                    </button>
+                </div>
+                <div class="relative bg-[#191919] border border-[#373737] rounded-lg p-4 font-mono text-sm overflow-x-auto">
+                    <code id="formulaOutput" class="text-[#d4d4d4] whitespace-pre-wrap break-all block"></code>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const startTimeInput = document.getElementById('startTime');
+        const endTimeInput = document.getElementById('endTime');
+        const nextDayCheck = document.getElementById('nextDayCheck');
+        const formulaOutput = document.getElementById('formulaOutput');
+        const copyBtn = document.getElementById('copyBtn');
+        const copyText = document.getElementById('copyText');
+
+        // Parse HH:MM to Number
+        function parseTime(timeString) {
+            if (!timeString) return { h: 0, m: 0, raw: 0 };
+            const parts = timeString.split(':');
+            const h = parseInt(parts[0], 10) || 0;
+            const m = parseInt(parts[1], 10) || 0;
+            return {
+                h, m, raw: (h * 60) + m
+            };
+        }
+
+        // Build a single date segment
+        function buildSegment(baseVariable, h, m, isNextDay = false) {
+            let segment = baseVariable;
+            if (isNextDay) {
+                segment += `.dateAdd(1, "days")`;
+            }
+            if (h > 0) {
+                segment += `.dateAdd(${h}, "hours")`;
+            }
+            if (m > 0) {
+                segment += `.dateAdd(${m}, "minutes")`;
+            }
+            return segment;
+        }
+
+        // Generate the full formula
+        function generateFormula(e) {
+            const start = parseTime(startTimeInput.value);
+            const end = parseTime(endTimeInput.value);
+            
+            // Auto-check next day if end time is before start time
+            // Only trigger auto-check if the event came from the time inputs
+            if (e && (e.target === startTimeInput || e.target === endTimeInput)) {
+                if (end.raw < start.raw) {
+                    nextDayCheck.checked = true;
+                } else {
+                    nextDayCheck.checked = false;
+                }
+            }
+
+            const isNextDay = nextDayCheck.checked;
+            const baseVar = "d";
+            
+            const startSegment = buildSegment(baseVar, start.h, start.m, false);
+            const endSegment = buildSegment(baseVar, end.h, end.m, isNextDay);
+            
+            const finalFormula = `let(\n  d, today(),\n  dateRange(\n    ${startSegment},\n    ${endSegment}\n  )\n)`;
+
+            formulaOutput.textContent = finalFormula;
+        }
+
+        // Copy functionality using a robust fallback mechanism
+        function copyToClipboard() {
+            const textToCopy = formulaOutput.textContent;
+            
+            // Fallback for iFrame environments (like this collaborative space)
+            const textArea = document.createElement("textarea");
+            textArea.value = textToCopy;
+            
+            // Avoid scrolling to bottom
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.position = "fixed";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            try {
+                const successful = document.execCommand('copy');
+                if(successful) {
+                    copyText.textContent = "Copied!";
+                    copyBtn.classList.replace('bg-[#2eaadc]', 'bg-green-600');
+                    copyBtn.classList.replace('hover:bg-[#258eab]', 'hover:bg-green-700');
+                    
+                    setTimeout(() => {
+                        copyText.textContent = "Copy";
+                        copyBtn.classList.replace('bg-green-600', 'bg-[#2eaadc]');
+                        copyBtn.classList.replace('hover:bg-green-700', 'hover:bg-[#258eab]');
+                    }, 2000);
+                } else {
+                    throw new Error("execCommand failed");
+                }
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+                copyText.textContent = "Failed";
+                setTimeout(() => copyText.textContent = "Copy", 2000);
+            }
+
+            document.body.removeChild(textArea);
+        }
+
+        // Event Listeners
+        startTimeInput.addEventListener('input', generateFormula);
+        endTimeInput.addEventListener('input', generateFormula);
+        nextDayCheck.addEventListener('change', generateFormula);
+        copyBtn.addEventListener('click', copyToClipboard);
+
+        // Initial Generation
+        generateFormula();
+    </script>
+</body>
+</html>
