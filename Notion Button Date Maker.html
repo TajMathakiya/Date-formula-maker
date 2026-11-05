@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notion Button Date Maker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'media',
+            theme: {
+                extend: {
+                    colors: {
+                        notion: {
+                            light: {
+                                text: '#487CA5',
+                                bg: '#E9F3F7',
+                                icon: '#337EA9'
+                            },
+                            dark: {
+                                text: '#447ACB',
+                                bg: '#1F282D',
+                                icon: '#2E7CD1'
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        /* Forces absolute transparency for clean Notion embeds */
+        html, body {
+            background-color: transparent !important;
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Custom scrollbar to match Notion's subtle aesthetic */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 4px;
+        }
+        @media (prefers-color-scheme: dark) {
+            ::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.2);
+            }
+        }
+        
+        /* Interactive element transitions */
+        .day-btn {
+            transition: all 0.2s ease;
+        }
+        .day-btn.active {
+            background-color: #487CA5;
+            color: #ffffff;
+            border-color: #487CA5;
+        }
+        @media (prefers-color-scheme: dark) {
+            .day-btn.active {
+                background-color: #447ACB;
+                color: #ffffff;
+                border-color: #447ACB;
+            }
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-4 font-sans antialiased">
+
+    <!-- Main Container: Callout styling with exactly 4px border, 4px radius, and requested Hex colors -->
+    <div class="w-full max-w-3xl border-4 rounded-[4px] border-notion-light-text bg-notion-light-bg text-notion-light-text dark:border-notion-dark-text dark:bg-notion-dark-bg dark:text-notion-dark-text p-6 space-y-6">
+        
+        <!-- Header -->
+        <div class="flex items-center gap-3 border-b border-notion-light-text/30 dark:border-notion-dark-text/30 pb-4">
+            <svg class="w-8 h-8 text-notion-light-icon dark:text-notion-dark-icon" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" viewBox="0 0 512 512" style="enable-background:new 0 0 512 512;" xml:space="preserve">
+                <g id="Time_1_">
+                    <g id="Hospital_2_">
+                        <line style="fill:none;stroke:currentColor;stroke-width:40;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" x1="140" y1="20" x2="140" y2="100"/>
+                        <line style="fill:none;stroke:currentColor;stroke-width:40;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" x1="340" y1="20" x2="340" y2="100"/>
+                        <path style="fill:none;stroke:currentColor;stroke-width:40;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" d="M196.703,460H100c-44.182,0-80-35.818-80-80V140c0-44.185,35.818-80,80-80h280c44.182,0,80,35.815,80,80v40H20"/>
+                        <line style="fill:none;stroke:currentColor;stroke-width:40;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" x1="100" y1="260" x2="100" y2="260"/>
+                        <line style="fill:none;stroke:currentColor;stroke-width:40;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" x1="180" y1="260" x2="180" y2="260"/>
+                        <line style="fill:none;stroke:currentColor;stroke-width:40;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" x1="100" y1="340" x2="100" y2="340"/>
+                        <line style="fill:none;stroke:currentColor;stroke-width:40;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" x1="180" y1="340" x2="180" y2="340"/>
+                    </g>
+                    <circle style="fill:none;stroke:currentColor;stroke-width:40;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" cx="372" cy="372" r="120"/>
+                    <line style="fill:none;stroke:currentColor;stroke-width:40;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" x1="372" y1="372" x2="372" y2="332"/>
+                    <line style="fill:none;stroke:currentColor;stroke-width:40;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:10;" x1="412" y1="372" x2="372" y2="372"/>
+                </g>
+            </svg>
+            <div>
+                <h1 class="text-xl font-bold font-semibold tracking-tight">Notion Button Date Maker</h1>
+                <p id="today-text" class="text-sm font-medium mt-1 opacity-80"></p>
+            </div>
+        </div>
+
+        <!-- Weekly Day Selector -->
+        <div class="space-y-2">
+            <label class="block text-sm font-medium">Select Target Day</label>
+            <div id="day-selector" class="flex flex-wrap gap-2">
+                <!-- Buttons injected via JS -->
+            </div>
+        </div>
+
+        <!-- Time Inputs -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-1">
+                <label for="startTime" class="block text-sm font-medium">Start Time</label>
+                <div class="relative">
+                    <input type="time" id="startTime" class="w-full bg-white/60 dark:bg-black/20 border border-notion-light-text/30 dark:border-notion-dark-text/30 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-notion-light-text dark:focus:ring-notion-dark-text" value="05:00">
+                </div>
+            </div>
+            
+            <div class="space-y-1">
+                <label for="endTime" class="block text-sm font-medium">End Time</label>
+                <div class="relative">
+                    <input type="time" id="endTime" class="w-full bg-white/60 dark:bg-black/20 border border-notion-light-text/30 dark:border-notion-dark-text/30 rounded px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-notion-light-text dark:focus:ring-notion-dark-text" value="05:20">
+                </div>
+            </div>
+        </div>
+
+        <!-- Next Day Checkbox -->
+        <div class="flex items-center gap-2 mt-2">
+            <input type="checkbox" id="nextDayCheck" class="w-4 h-4 rounded border-gray-300 text-notion-light-text dark:text-notion-dark-text focus:ring-notion-light-text">
+            <label for="nextDayCheck" class="text-sm font-medium cursor-pointer select-none">End time is on the next day</label>
+        </div>
+
+        <!-- Generated Formula Output -->
+        <div class="pt-4 border-t border-notion-light-text/30 dark:border-notion-dark-text/30">
+            <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-semibold">Generated Formula</h3>
+                <button id="copyBtn" class="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-notion-light-text text-white dark:bg-notion-dark-text rounded transition-colors hover:opacity-90">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <span id="copyText">Copy</span>
+                </button>
+            </div>
+            
+            <div class="relative">
+                <textarea id="formulaOutput" readonly class="w-full h-40 p-4 bg-white/60 dark:bg-black/20 border border-notion-light-text/30 dark:border-notion-dark-text/30 rounded font-mono text-xs leading-relaxed resize-none focus:outline-none" spellcheck="false"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const startTimeInput = document.getElementById('startTime');
+            const endTimeInput = document.getElementById('endTime');
+            const nextDayCheck = document.getElementById('nextDayCheck');
+            const formulaOutput = document.getElementById('formulaOutput');
+            const copyBtn = document.getElementById('copyBtn');
+            const copyText = document.getElementById('copyText');
+            const daySelector = document.getElementById('day-selector');
+            const todayText = document.getElementById('today-text');
+
+            const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+            const fullDays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+            
+            const todayDate = new Date();
+            const todayIndex = todayDate.getDay();
+            let selectedDayOffset = 0; // Default to today
+
+            // Set the Header Context
+            todayText.textContent = `Today is ${fullDays[todayIndex]}`;
+
+            // Generate Day Buttons logically wrapping around the week
+            for (let i = 0; i < 7; i++) {
+                // Calculate chronological index starting from Mon (1) through Sun (0 mapped to 7 for visual flow)
+                // We'll layout Mon-Sun
+                const visualOrder = [1, 2, 3, 4, 5, 6, 0]; 
+                const dayIdx = visualOrder[i];
+                
+                const btn = document.createElement('button');
+                btn.className = `day-btn px-4 py-1.5 border border-notion-light-text/50 dark:border-notion-dark-text/50 rounded text-sm font-medium bg-transparent hover:bg-notion-light-text/10 dark:hover:bg-notion-dark-text/10`;
+                btn.textContent = days[dayIdx];
+                
+                // Calculate Offset
+                let offset = dayIdx - todayIndex;
+                if (offset < 0) {
+                    offset += 7; // Select the upcoming instance of that day
+                }
+
+                // Highlight today by default
+                if (offset === 0) {
+                    btn.classList.add('active');
+                }
+
+                btn.addEventListener('click', () => {
+                    // Remove active from all
+                    document.querySelectorAll('.day-btn').forEach(b => b.classList.remove('active'));
+                    // Add active to clicked
+                    btn.classList.add('active');
+                    selectedDayOffset = offset;
+                    generateFormula();
+                });
+
+                daySelector.appendChild(btn);
+            }
+
+            function parseTime(timeStr) {
+                if (!timeStr) return { hours: 0, minutes: 0 };
+                const [h, m] = timeStr.split(':').map(Number);
+                return { hours: h, minutes: m };
+            }
+
+            function formatFormulaSegment(baseVar, hours, minutes) {
+                let segment = baseVar;
+                if (hours > 0) {
+                    segment += `.dateAdd(${hours}, "hours")`;
+                }
+                if (minutes > 0) {
+                    segment += `.dateAdd(${minutes}, "minutes")`;
+                }
+                return segment;
+            }
+
+            function generateFormula() {
+                const start = parseTime(startTimeInput.value);
+                const end = parseTime(endTimeInput.value);
+                
+                // Auto-check next day logic based on time
+                const startTotalMins = (start.hours * 60) + start.minutes;
+                const endTotalMins = (end.hours * 60) + end.minutes;
+                
+                if (endTotalMins < startTotalMins && document.activeElement !== nextDayCheck) {
+                    nextDayCheck.checked = true;
+                }
+
+                const isNextDay = nextDayCheck.checked;
+
+                // Base date string logic with day offset calculation
+                let todayString = `today()`;
+                if (selectedDayOffset > 0) {
+                    todayString = `today().dateAdd(${selectedDayOffset}, "days")`;
+                }
+
+                // Building the optimized `let` statement
+                let formula = `let(\n  d, ${todayString},\n  dateRange(\n`;
+                
+                // Start Time block
+                let startSegment = formatFormulaSegment('d', start.hours, start.minutes);
+                formula += `    ${startSegment},\n`;
+
+                // End Time block
+                let endBaseVar = isNextDay ? `d.dateAdd(1, "days")` : `d`;
+                let endSegment = formatFormulaSegment(endBaseVar, end.hours, end.minutes);
+                formula += `    ${endSegment}\n  )\n)`;
+
+                formulaOutput.value = formula;
+            }
+
+            // Attach listeners to trigger recalculations in real-time
+            startTimeInput.addEventListener('input', generateFormula);
+            endTimeInput.addEventListener('input', generateFormula);
+            nextDayCheck.addEventListener('change', generateFormula);
+
+            // Copy logic matching Notion's interface behavior
+            copyBtn.addEventListener('click', () => {
+                formulaOutput.select();
+                document.execCommand('copy');
+                
+                const originalBg = copyBtn.className;
+                copyBtn.className = "flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded transition-colors bg-green-600 text-white";
+                copyText.textContent = 'Copied!';
+                
+                setTimeout(() => {
+                    copyBtn.className = originalBg;
+                    copyText.textContent = 'Copy';
+                    window.getSelection().removeAllRanges();
+                }, 2000);
+            });
+
+            // Initialize data on load
+            generateFormula();
+        });
+    </script>
+</body>
+</html>
